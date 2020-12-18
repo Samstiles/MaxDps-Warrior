@@ -240,7 +240,7 @@ function Warrior:ArmsTwoOrMoreTargets()
 		return AR.Skullsplitter;
 	end
 	
-	if talents[AR.Cleave] and cooldown[AR.Cleave].ready and debuff[A.DeepWounds].remains < 4 then
+	if talents[AR.Cleave] and cooldown[AR.Cleave].ready and debuff[A.DeepWounds].remains < 4 and rage >= 20 then
 		return AR.Cleave;
 	end
 
@@ -296,7 +296,7 @@ function Warrior:ArmsFourOrMoreTargets()
 		return AR.Skullsplitter;
 	end
 	
-	if talents[AR.Cleave] and cooldown[AR.Cleave].ready and debuff[A.DeepWounds].remains < 4 then
+	if talents[AR.Cleave] and cooldown[AR.Cleave].ready and debuff[A.DeepWounds].remains < 4 and rage >= 20 then
 		return AR.Cleave;
 	end
 
