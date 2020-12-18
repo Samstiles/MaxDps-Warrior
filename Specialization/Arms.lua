@@ -56,11 +56,6 @@ function Warrior:Arms()
 
 	fd.rage, fd.targetHp, fd.targets = rage, targetHp, targets;
 
-	if (table.notEmpty(debuff)) then
-		print(dump(debuff));
-		print('------');
-	end
-
 	if targets >= 4 then
 		return Warrior:ArmsFourOrMoreTargets();
 	end
