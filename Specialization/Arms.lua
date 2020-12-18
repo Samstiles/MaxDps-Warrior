@@ -33,6 +33,14 @@ local AR = {
 	BloodFury = 20572,
 };
 
+-- Auras that you can check on the debuff table. They are different than the spell IDs
+local A = {
+	Condemned = 317491,
+	ColossusSmash = 208086,
+	DeepWounds = 262115,
+	MortalWounds = 116804
+};
+
 function debugPrint(message)
 	if (debug) then
 		print(message)
@@ -41,12 +49,17 @@ end
 
 function Warrior:Arms()
 	local fd = MaxDps.FrameData;
-	-- local targets = MaxDps:SmartAoe();
-	local targets = 2;
+	local targets = MaxDps:SmartAoe();
 	local targetHp = MaxDps:TargetPercentHealth() * 100;
 	local rage = UnitPower('player', PowerTypeRage);
+	local debuff = fd.debuff;
 
 	fd.rage, fd.targetHp, fd.targets = rage, targetHp, targets;
+
+	if (table.notEmpty(debuff)) then
+		print(dump(debuff));
+		print('------');
+	end
 
 	if targets >= 4 then
 		return Warrior:ArmsFourOrMoreTargets();
@@ -122,10 +135,10 @@ function Warrior:ArmsSingleTarget()
 		debugPrint("Skipping Warbreaker this frame")
 	end
 
-	if rage >= 30 and cooldown[AR.MortalStrike].ready and debuff[AR.DeepWounds].remains < 4 then
+	if rage >= 30 and cooldown[AR.MortalStrike].ready and debuff[A.DeepWounds].remains < 4 then
 		debugPrint("Mortal Strike for deep wounds:")
 		debugPrint("cooldown[AR.MortalStrike].ready", cooldown[AR.MortalStrike].ready)
-		debugPrint("debuff[AR.DeepWounds].remains", debuff[AR.DeepWounds].remains)
+		debugPrint("debuff[AR.DeepWounds].remains", debuff[A.DeepWounds].remains)
 		return AR.MortalStrike;
 	else
 		debugPrint("Skipping MortalStrike (for deep wounds) refresh this frame")
@@ -168,10 +181,10 @@ function Warrior:ArmsSingleTarget()
 		debugPrint("Skipping MortalStrike (regular) this frame")
 	end
 
-	if cooldown[AR.Bladestorm].ready and debuff[AR.ColossusSmash].remains >= 5 then
+	if cooldown[AR.Bladestorm].ready and debuff[A.ColossusSmash].remains >= 5 then
 		debugPrint("Bladestorm:")
 		debugPrint("cooldown[AR.Bladestorm].ready", cooldown[AR.Bladestorm].ready)
-		debugPrint("debuff[AR.ColossusSmash].remains", debuff[AR.ColossusSmash].remains)
+		debugPrint("debuff[AR.ColossusSmash].remains", debuff[A.ColossusSmash].remains)
 		return AR.Bladestorm;
 	else
 		debugPrint("Skipping Bladestorm this frame")
@@ -186,6 +199,26 @@ function Warrior:ArmsSingleTarget()
 	end
 end
 
+function table.notEmpty (self)
+    for _, _ in pairs(self) do
+        return true
+    end
+    return false
+end
+
+function dump(o)
+	if type(o) == 'table' then
+	   local s = '{ '
+	   for k,v in pairs(o) do
+		  if type(k) ~= 'number' then k = '"'..k..'"' end
+		  s = s .. '['..k..'] = ' .. dump(v) .. ','
+	   end
+	   return s .. '} '
+	else
+	   return tostring(o)
+	end
+ end
+
 function Warrior:ArmsTwoOrMoreTargets()
 	local fd = MaxDps.FrameData;
 	local talents = fd.talents;
@@ -198,7 +231,7 @@ function Warrior:ArmsTwoOrMoreTargets()
 	local gcdRemains = fd.gcdRemains;
 	local rage = UnitPower('player', Enum.PowerType.Rage);
 	local targetCondemnable = targetHp > 80 or (talents[AR.Massacre] and targetHp <= 35 or targetHp <= 20); 
-	print("Running arms 2-3 target rotation!")
+	debugPrint("Running arms 2-3 target rotation!")
 
 	if cooldown[AR.SweepingStrikes].ready then
 		return AR.SweepingStrikes;
@@ -211,18 +244,18 @@ function Warrior:ArmsTwoOrMoreTargets()
 	if cooldown[AR.Skullsplitter].ready and rage <= 60 and not(cooldown[AR.ColossusSmash].ready and cooldown[AR.Ravager].ready) then
 		return AR.Skullsplitter;
 	end
+	
+	if talents[AR.Cleave] and cooldown[AR.Cleave].ready and debuff[A.DeepWounds].remains < 4 then
+		return AR.Cleave;
+	end
 
 	if cooldown[AR.ColossusSmash].ready then
 		return AR.ColossusSmash;
 	end
 
 	-- TODO: Abstract talents that overlap, like condemn/execute and Ravager/bladestorm
-	if debuff[AR.ColossusSmash].up and cooldown[AR.Ravager].ready then
+	if debuff[A.ColossusSmash].remains >= 5 and cooldown[AR.Ravager].ready then
 		return AR.Ravager;
-	end
-
-	if talents[AR.Cleave] and cooldown[AR.Cleave].ready then
-		return AR.Cleave;
 	end
 
 	if (targetHp < 35 and rage >= 20) or (targetHp > 80 and rage >= 20) then
@@ -254,7 +287,7 @@ function Warrior:ArmsFourOrMoreTargets()
 	local gcdRemains = fd.gcdRemains;
 	local rage = UnitPower('player', Enum.PowerType.Rage);
 	local targetCondemnable = targetHp > 80 or (talents[AR.Massacre] and targetHp <= 35 or targetHp <= 20); 
-	print("Running arms 4+ target rotation!")
+	debugPrint("Running arms 4+ target rotation!")
 
 	if cooldown[AR.SweepingStrikes].ready then
 		return AR.SweepingStrikes;
@@ -267,18 +300,18 @@ function Warrior:ArmsFourOrMoreTargets()
 	if cooldown[AR.Skullsplitter].ready and rage <= 60 and not(cooldown[AR.ColossusSmash].ready and cooldown[AR.Ravager].ready) then
 		return AR.Skullsplitter;
 	end
+	
+	if talents[AR.Cleave] and cooldown[AR.Cleave].ready and debuff[A.DeepWounds].remains < 4 then
+		return AR.Cleave;
+	end
 
 	if cooldown[AR.ColossusSmash].ready then
 		return AR.ColossusSmash;
 	end
 
 	-- TODO: Abstract talents that overlap, like condemn/execute and Ravager/bladestorm
-	if debuff[AR.ColossusSmash].up and cooldown[AR.Ravager].ready then
+	if debuff[A.ColossusSmash].remains >= 5 and cooldown[AR.Ravager].ready then
 		return AR.Ravager;
-	end
-
-	if talents[AR.Cleave] and cooldown[AR.Cleave].ready then
-		return AR.Cleave;
 	end
 
 	if (targetHp < 35 and rage >= 20) or (targetHp > 80 and rage >= 20) then
