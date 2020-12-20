@@ -1,4 +1,4 @@
-## Title: Better_MaxDps_Warrior
+## Title: MaxDps_Warrior
 ## Version: 9.0.2.2
 ## Author: Sam
 ## Interface: 90002
